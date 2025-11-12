@@ -1,0 +1,81 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <h2 class="mb-4">Minha Biblioteca</h2>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-3 text-muted">Carregando sua biblioteca...</p>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+
+      <!-- Empty Library -->
+      <div *ngIf="!loading && !error && games.length === 0" class="text-center py-5">
+        <div class="mb-4">
+          <i class="bi bi-inbox" style="font-size: 4rem; color: #6c757d;"></i>
+        </div>
+        <h4 class="text-muted mb-3">Você ainda não possui jogos na sua biblioteca.</h4>
+        <p class="text-muted mb-4">Explore nossa loja e compre jogos incríveis!</p>
+        <button class="btn btn-primary" (click)="goToStore()">
+          <i class="bi bi-shop me-2"></i>
+          Ir para a Loja
+        </button>
+      </div>
+
+      <!-- Games List -->
+      <div *ngIf="!loading && !error && games.length > 0">
+        <p class="text-muted mb-3">
+          Você possui {{ games.length }} {{ games.length === 1 ? 'jogo' : 'jogos' }} na sua biblioteca
+        </p>
+
+        <div class="row g-4">
+          <div *ngFor="let game of games" class="col-md-6 col-lg-4">
+            <div class="card h-100 game-card" (click)="openGame(game)" style="cursor: pointer;">
+              <div class="card-body">
+                <h5 class="card-title">{{ game.title }}</h5>
+                <p class="card-text text-muted" *ngIf="game.description">
+                  {{ game.description.length > 100 ? (game.description | slice:0:100) + '...' : game.description }}
+                </p>
+                <div class="mt-3">
+                  <span *ngIf="game.genre" class="badge bg-secondary me-2">{{ game.genre }}</span>
+                  <span *ngIf="game.publisher" class="badge bg-info">{{ game.publisher }}</span>
+                </div>
+                <div class="mt-3" *ngIf="game.releaseDate">
+                  <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>
+                    {{ game.releaseDate | date:'dd/MM/yyyy' }}
+                  </small>
+                </div>
+              </div>
+              <div class="card-footer bg-transparent">
+                <button class="btn btn-sm btn-outline-primary w-100" (click)="openGame(game); $event.stopPropagation()">
+                  <i class="bi bi-play-circle me-2"></i>
+                  Ver Detalhes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .game-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+</style>
+

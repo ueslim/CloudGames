@@ -1,0 +1,47 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/">CloudGames</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto" *ngIf="(isAuthenticated$ | async); else anon">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/games" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Loja</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/games/search" routerLinkActive="active">Buscar</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/games/library" routerLinkActive="active">Minha Biblioteca</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/promotions" routerLinkActive="active">Promoções</a>
+        </li>
+        <li class="nav-item" *ngIf="isAdmin">
+          <a class="nav-link" routerLink="/games/admin/new" routerLinkActive="active">Cadastrar Jogo</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/profile" routerLinkActive="active">Perfil</a>
+        </li>
+      </ul>
+      <ng-template #anon>
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/auth/login">Entrar</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/auth/register">Registrar</a>
+          </li>
+        </ul>
+      </ng-template>
+
+      <div class="d-flex align-items-center" *ngIf="(isAuthenticated$ | async)">
+        <span class="navbar-text me-3" *ngIf="(currentUser$ | async) as user">{{ user.name || user.email }}</span>
+        <button class="btn btn-outline-light" (click)="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+

@@ -1,0 +1,90 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <h2 class="mb-4">Buscar Jogos</h2>
+
+      <!-- Search Form -->
+      <form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="mb-4">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            formControlName="query"
+            placeholder="Digite o nome do jogo, gênero ou desenvolvedor..."
+            [disabled]="loading"
+          />
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="searchForm.invalid || loading"
+          >
+            <span *ngIf="!loading">Buscar</span>
+            <span *ngIf="loading">
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Buscando...
+            </span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="clear()"
+            [disabled]="loading"
+          >
+            Limpar
+          </button>
+        </div>
+        <small class="form-text text-muted mt-2 d-block">
+          Digite no mínimo 2 caracteres para buscar
+        </small>
+      </form>
+
+      <!-- Error Message -->
+      <div *ngIf="error" class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+
+      <!-- No Results Message -->
+      <div *ngIf="searched && !loading && games.length === 0 && !error" class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle me-2"></i>
+        Nenhum jogo encontrado para sua busca.
+      </div>
+
+      <!-- Search Results -->
+      <div *ngIf="games.length > 0" class="mt-4">
+        <h5 class="mb-3">Resultados da Busca ({{ games.length }})</h5>
+        <div class="list-group">
+          <a
+            *ngFor="let game of games"
+            href="javascript:void(0)"
+            class="list-group-item list-group-item-action"
+            (click)="openGame(game)"
+          >
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1">{{ game.title }}</h5>
+              <div class="d-flex align-items-center gap-2">
+                <span *ngIf="game.promotionalPrice" class="badge bg-danger">
+                  -{{ game.discountPercentage }}%
+                </span>
+                <small *ngIf="game.promotionalPrice" class="text-decoration-line-through text-muted">
+                  {{ game.price | currency:'BRL':'symbol':'1.2-2' }}
+                </small>
+                <small *ngIf="game.price" [ngClass]="game.promotionalPrice ? 'text-success fw-bold fs-5' : 'text-success fw-bold'">
+                  {{ (game.promotionalPrice || game.price) | currency:'BRL':'symbol':'1.2-2' }}
+                </small>
+              </div>
+            </div>
+            <p class="mb-1" *ngIf="game.description">
+              {{ game.description.length > 150 ? (game.description | slice:0:150) + '...' : game.description }}
+            </p>
+            <small class="text-muted">
+              <span *ngIf="game.genre" class="badge bg-secondary me-2">{{ game.genre }}</span>
+              <span *ngIf="game.publisher">{{ game.publisher }}</span>
+              <span *ngIf="game.releaseDate"> • {{ game.releaseDate | date:'dd/MM/yyyy' }}</span>
+            </small>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

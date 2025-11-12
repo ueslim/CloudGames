@@ -1,0 +1,27 @@
+<div class="container my-5">
+  <app-loading-spinner 
+    *ngIf="loading" 
+    message="Seu pagamento está sendo processado..." 
+    size="lg">
+  </app-loading-spinner>
+
+  <div *ngIf="!loading">
+    <div *ngIf="error" class="alert alert-warning mb-3">{{ error }}</div>
+
+    <div *ngIf="status === 'Pending'" class="alert alert-info">
+      Seu pagamento está sendo processado...
+    </div>
+
+    <div *ngIf="status === 'Approved'" class="alert alert-success d-flex justify-content-between align-items-center">
+      <span>Pagamento aprovado! Aproveite seu jogo.</span>
+      <a routerLink="/games" class="btn btn-outline-light">Voltar aos jogos</a>
+    </div>
+
+    <div *ngIf="status === 'Declined'" class="alert alert-danger d-flex justify-content-between align-items-center">
+      <span>Pagamento recusado. Por favor, tente novamente.</span>
+      <a routerLink="/games" class="btn btn-outline-light">Voltar aos jogos</a>
+    </div>
+  </div>
+</div>
+
+

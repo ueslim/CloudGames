@@ -1,0 +1,43 @@
+<app-loading-spinner 
+  *ngIf="loading" 
+  message="Carregando jogos..." 
+  size="lg">
+</app-loading-spinner>
+
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<div *ngIf="!loading && !error">
+  <div *ngIf="games.length === 0" class="text-muted">Nenhum jogo encontrado</div>
+
+  <div class="row" *ngIf="games.length > 0">
+    <div class="col-md-4 mb-3" *ngFor="let g of games">
+      <div class="card h-100">
+        <img *ngIf="g.coverImageUrl" [src]="g.coverImageUrl" class="card-img-top" [alt]="g.title">
+        <div class="card-body">
+          <h5 class="card-title d-flex justify-content-between align-items-start">
+            <span>{{ g.title }}</span>
+            <div class="d-flex flex-column align-items-end gap-1">
+              <span *ngIf="g.promotionalPrice" class="badge bg-danger">
+                -{{ g.discountPercentage }}%
+              </span>
+              <div class="d-flex flex-column align-items-end">
+                <span *ngIf="g.promotionalPrice" class="text-decoration-line-through text-muted small">
+                  {{ g.price | currency: 'BRL' }}
+                </span>
+                <span class="badge" [ngClass]="g.promotionalPrice ? 'bg-success' : 'bg-primary'">
+                  {{ (g.promotionalPrice || g.price) | currency: 'BRL' }}
+                </span>
+              </div>
+            </div>
+          </h5>
+          <p class="card-text mb-1"><strong>Gênero:</strong> {{ g.genre }}</p>
+        </div>
+        <div class="card-footer bg-transparent border-0">
+          <a class="btn btn-outline-primary w-100" [routerLink]="['/games', g.id]">Detalhes</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

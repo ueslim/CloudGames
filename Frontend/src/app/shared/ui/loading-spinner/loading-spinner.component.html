@@ -1,0 +1,7 @@
+<div [class.d-flex]="centered" [class.justify-content-center]="centered" [class.align-items-center]="centered" [class.my-5]="centered">
+  <div [class]="spinnerClass" role="status">
+    <span class="visually-hidden">{{ message }}</span>
+  </div>
+  <span *ngIf="message && size !== 'sm'" class="ms-2" [class.align-self-center]="centered">{{ message }}</span>
+</div>
+

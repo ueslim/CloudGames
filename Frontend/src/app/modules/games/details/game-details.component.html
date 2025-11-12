@@ -1,0 +1,59 @@
+<app-loading-spinner 
+  *ngIf="loading" 
+  message="Carregando detalhes do jogo..." 
+  size="lg">
+</app-loading-spinner>
+
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+<div *ngIf="notFound" class="alert alert-warning">Jogo não encontrado</div>
+
+<div *ngIf="!loading && game" class="card">
+  <div class="row g-0">
+    <div class="col-md-5">
+      <img *ngIf="game.coverImageUrl" [src]="game.coverImageUrl" class="img-fluid rounded-start w-100 h-100 object-fit-cover" [alt]="game.title">
+    </div>
+    <div class="col-md-7">
+      <div class="card-body">
+        <h3 class="card-title d-flex justify-content-between align-items-center">
+          <span>{{ game.title }}</span>
+          <div class="d-flex flex-column align-items-end gap-1">
+            <span *ngIf="game.promotionalPrice" class="badge bg-danger fs-6">
+              -{{ game.discountPercentage }}% OFF
+            </span>
+            <div class="d-flex align-items-center gap-2">
+              <span *ngIf="game.promotionalPrice" class="text-decoration-line-through text-muted">
+                {{ game.price | currency: 'BRL' }}
+              </span>
+              <span class="badge fs-6" [ngClass]="game.promotionalPrice ? 'bg-success' : 'bg-primary'">
+                {{ (game.promotionalPrice || game.price) | currency: 'BRL' }}
+              </span>
+            </div>
+          </div>
+        </h3>
+        <p class="card-text">{{ game.description }}</p>
+        <div class="row">
+          <div class="col-sm-6 mb-2"><strong>Publicador:</strong> {{ game.publisher }}</div>
+          <div class="col-sm-6 mb-2"><strong>Data de lançamento:</strong> {{ game.releaseDate | date }}</div>
+          <div class="col-sm-6 mb-2"><strong>Gênero:</strong> {{ game.genre }}</div>
+        </div>
+        <div *ngIf="purchaseError" class="alert alert-danger mt-2">{{ purchaseError }}</div>
+      </div>
+      <div class="card-footer bg-transparent border-0 p-3">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary" (click)="goBack()">
+            <i class="bi bi-arrow-left me-1"></i> Voltar
+          </button>
+          <button class="btn btn-success flex-grow-1 d-flex align-items-center justify-content-center" [disabled]="purchasing" (click)="buy()">
+            <span *ngIf="!purchasing">Comprar</span>
+            <span *ngIf="purchasing" class="d-flex align-items-center">
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Iniciando compra...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

@@ -1,0 +1,56 @@
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title mb-3">Cadastrar Jogo</h4>
+
+    <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Título</label>
+          <input class="form-control" formControlName="title">
+          <div class="text-danger" *ngIf="form.controls.title.touched && form.controls.title.invalid">Título é obrigatório</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Gênero</label>
+          <input class="form-control" formControlName="genre">
+          <div class="text-danger" *ngIf="form.controls.genre.touched && form.controls.genre.invalid">Gênero é obrigatório</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Descrição</label>
+          <textarea class="form-control" rows="4" formControlName="description"></textarea>
+          <div class="text-danger" *ngIf="form.controls.description.touched && form.controls.description.invalid">Descrição é obrigatória</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Publicador</label>
+          <input class="form-control" formControlName="publisher">
+          <div class="text-danger" *ngIf="form.controls.publisher.touched && form.controls.publisher.invalid">Publicador é obrigatório</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Data de Lançamento</label>
+          <input type="date" class="form-control" formControlName="releaseDate">
+          <div class="text-danger" *ngIf="form.controls.releaseDate.touched && form.controls.releaseDate.invalid">Data de lançamento é obrigatória</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Preço</label>
+          <input type="number" min="0.01" step="0.01" class="form-control" formControlName="price">
+          <div class="text-danger" *ngIf="form.controls.price.touched && form.controls.price.invalid">Preço deve ser maior que zero</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">URL da Capa</label>
+          <input class="form-control" formControlName="coverImageUrl" placeholder="https://example.com/image.jpg">
+        </div>
+      </div>
+
+      <div class="mt-4 d-flex align-items-center">
+        <button class="btn btn-primary" type="submit" [disabled]="form.invalid || saving">
+          <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Salvar
+        </button>
+        <a class="btn btn-link ms-2" routerLink="/games">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+
