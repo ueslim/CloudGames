@@ -13,7 +13,7 @@ services:
     ports:
       - "1433:1433"
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"${SQL_SA_PASSWORD:-Your_password123}\" -Q \"SELECT 1\""]
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\""]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -61,6 +61,74 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  # ============================================
+  # MICROSERVIÇOS
+  # ============================================
+
+  users-api:
+    build:
+      context: ./Users
+    image: cloudgames-users
+    container_name: users-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__UsersDb=${USERS_DB_CONNECTION}
+      - ConnectionStrings__Storage=${AZURE_STORAGE_CONNECTION}
+      - Queues__Users=${USERS_QUEUE}
+      - JwtSettings__Secret=${JWT_SECRET}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_AUDIENCE}
+    ports:
+      - "5001:8080"
+    depends_on:
+      - sqlserver
+      - azurite
+    networks:
+      - cloudgames-network
+
+  games-api:
+    build:
+      context: ./Games
+    image: cloudgames-games
+    container_name: games-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__GamesDb=${GAMES_DB_CONNECTION}
+      - ConnectionStrings__Storage=${AZURE_STORAGE_CONNECTION}
+      - Elastic__Endpoint=${ELASTIC_ENDPOINT}
+      - Elastic__IndexName=${ELASTIC_INDEX}
+      - Queues__Payments=${PAYMENTS_QUEUE}
+      - Services__PaymentsApi=${Services__PaymentsApi}
+    ports:
+      - "5002:8080"
+    depends_on:
+      - sqlserver
+      - azurite
+      - elasticsearch
+    networks:
+      - cloudgames-network
+
+  payments-api:
+    build:
+      context: ./Payments
+    image: cloudgames-payments
+    container_name: payments-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__PaymentsDb=${PAYMENTS_DB_CONNECTION}
+      - ConnectionStrings__Storage=${AZURE_STORAGE_CONNECTION}
+      - Services__GamesApi=${Services__GamesApi}
+    ports:
+      - "5003:8080"
+    depends_on:
+      - sqlserver
+      - azurite
+    networks:
+      - cloudgames-network
 
 volumes:
   sqlserver-data:
