@@ -1,0 +1,125 @@
+name: CloudGames CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend_any_changed }}
+      dotnet: ${{ steps.matrix.outputs.dotnet }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: filter
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            frontend:
+              - "Frontend/**"
+            users:
+              - "Users/**"
+            games:
+              - "Games/**"
+            payments:
+              - "Payments/**"
+            functions:
+              - "Functions/**"
+
+      - name: Build dotnet matrix
+        id: matrix
+        env:
+          USERS_CHANGED: ${{ steps.filter.outputs.users_any_changed }}
+          GAMES_CHANGED: ${{ steps.filter.outputs.games_any_changed }}
+          PAYMENTS_CHANGED: ${{ steps.filter.outputs.payments_any_changed }}
+          FUNCTIONS_CHANGED: ${{ steps.filter.outputs.functions_any_changed }}
+        run: |
+          services=()
+
+          if [ "${USERS_CHANGED}" = "true" ]; then
+            services+=('{"service":"users","project":"Users/src/CloudGames.Users.Web/CloudGames.Users.Web.csproj","test":"Users/tests/CloudGames.Users.Tests/CloudGames.Users.Tests.csproj"}')
+          fi
+
+          if [ "${GAMES_CHANGED}" = "true" ]; then
+            services+=('{"service":"games","project":"Games/src/CloudGames.Games.Api/CloudGames.Games.Api.csproj","test":"Games/tests/CloudGames.Games.Tests.csproj"}')
+          fi
+
+          if [ "${PAYMENTS_CHANGED}" = "true" ]; then
+            services+=('{"service":"payments","project":"Payments/src/CloudGames.Payments.Web/CloudGames.Payments.Web.csproj","test":"Payments/tests/CloudGames.Payments.Tests/CloudGames.Payments.Tests.csproj"}')
+          fi
+
+          if [ "${FUNCTIONS_CHANGED}" = "true" ]; then
+            services+=('{"service":"functions","project":"Functions/src/CloudGames.Functions/CloudGames.Functions.csproj","test":"Functions/tests/CloudGames.Functions.Tests/CloudGames.Functions.Tests.csproj"}')
+          fi
+
+          if [ "${#services[@]}" -eq 0 ]; then
+            echo 'dotnet=[]' >> "$GITHUB_OUTPUT"
+          else
+            printf '%s\n' "${services[@]}" | jq -s '.' > matrix.json
+            echo "dotnet=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
+          fi
+
+  dotnet:
+    needs: changes
+    if: ${{ needs.changes.outputs.dotnet != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.changes.outputs.dotnet) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore "${{ matrix.project }}"
+
+      - name: Build
+        run: dotnet build "${{ matrix.project }}" --configuration Release --no-restore
+
+      - name: Test
+        if: matrix.test != ''
+        run: dotnet test "${{ matrix.test }}" --configuration Release --no-build
+
+  frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build
+        run: npm run build
+        env:
+          APIM_KEY: dummy-ci-key
+

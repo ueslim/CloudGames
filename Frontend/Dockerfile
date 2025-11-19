@@ -1,17 +1,19 @@
-# Multi-stage build for Angular application
+# Build stage
 FROM node:18-alpine AS build
-
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source code
 COPY . .
+
+# Build argument for APIM_KEY
+ARG APIM_KEY=local-development-key
+ENV APIM_KEY=$APIM_KEY
 
 # Build the application
 RUN npm run build:prod
@@ -30,3 +32,4 @@ EXPOSE 80
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
+

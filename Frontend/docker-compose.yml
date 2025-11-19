@@ -1,0 +1,17 @@
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        APIM_KEY: ${APIM_KEY:-local-development-key}
+    image: cloudgames-frontend-test
+    container_name: frontend
+    ports:
+      - "4200:80"
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
+    driver: bridge
+

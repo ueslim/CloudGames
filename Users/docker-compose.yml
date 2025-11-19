@@ -1,0 +1,61 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: users-sql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Your_password123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"Your_password123\" -Q \"SELECT 1\""]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - users-network
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: users-azurite
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --loose
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    networks:
+      - users-network
+
+  users-api:
+    build:
+      context: .
+    image: cloudgames-users-test
+    container_name: users-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__UsersDb=Server=sqlserver,1433;Database=CloudGames.Users;User Id=sa;Password=Your_password123;TrustServerCertificate=True;Encrypt=False;
+      - ConnectionStrings__Storage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      - Queues__Users=users-events
+      - JwtSettings__Secret=my-super-secret-key-1234567890-ABCD
+      - JwtSettings__Issuer=CloudGames
+      - JwtSettings__Audience=CloudGamesUsers
+    ports:
+      - "5001:8080"
+    depends_on:
+      - sqlserver
+      - azurite
+    networks:
+      - users-network
+
+volumes:
+  sqlserver-data:
+
+networks:
+  users-network:
+    driver: bridge
+

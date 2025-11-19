@@ -1,48 +1,83 @@
-version: '3.8'
-
 services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: games-sql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Your_password123
+      - MSSQL_PID=Developer
+    ports:
+      - "1434:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"Your_password123\" -Q \"SELECT 1\""]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - games-network
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: games-azurite
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --loose
+    ports:
+      - "10003:10000"
+      - "10004:10001"
+      - "10005:10002"
+    networks:
+      - games-network
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: cloudgames-elasticsearch
+    container_name: games-elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "9201:9200"
+      - "9301:9300"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
-      - cloudgames-network
+      - games-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.0
-    container_name: cloudgames-kibana
+  games-api:
+    build:
+      context: .
+    image: cloudgames-games-test
+    container_name: games-api
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__GamesDb=Server=sqlserver,1433;Database=CloudGames.Games;User Id=sa;Password=Your_password123;TrustServerCertificate=True;Encrypt=False;
+      - ConnectionStrings__Storage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      - Elastic__Endpoint=http://elasticsearch:9200
+      - Elastic__IndexName=games
+      - Queues__Payments=payments-events
+      - Services__PaymentsApi=http://localhost:5003
     ports:
-      - "5601:5601"
+      - "5002:8080"
     depends_on:
+      - sqlserver
+      - azurite
       - elasticsearch
     networks:
-      - cloudgames-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - games-network
 
 volumes:
+  sqlserver-data:
   elasticsearch-data:
-    driver: local
 
 networks:
-  cloudgames-network:
+  games-network:
     driver: bridge
 

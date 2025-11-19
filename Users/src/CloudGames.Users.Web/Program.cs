@@ -44,17 +44,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 var app = builder.Build();
 
 // Apply EF Core migrations for all contexts before hosted services start
-using (var scope = app.Services.CreateScope())
-{
-    var usersDb = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
-    usersDb.Database.Migrate();
-
-    var eventDb = scope.ServiceProvider.GetRequiredService<EventStoreSqlContext>();
-    eventDb.Database.Migrate();
-
-    var outboxDb = scope.ServiceProvider.GetRequiredService<OutboxContext>();
-    outboxDb.Database.Migrate();
-}
+await DatabaseInitializer.EnsureDatabasesMigratedAsync(app.Services);
 
 app.UseSwaggerDocs(app.Environment);
 app.UseGlobalExceptionHandling(); // Added: Global exception handling middleware
