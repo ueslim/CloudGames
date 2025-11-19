@@ -15,8 +15,8 @@ COPY . .
 ARG APIM_KEY=local-development-key
 ENV APIM_KEY=$APIM_KEY
 
-# Build the application
-RUN npm run build:prod
+# Build the application (uses environment.ts with local URLs /api/*)
+RUN npm run build
 
 # Production stage with nginx
 FROM nginx:alpine

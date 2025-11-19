@@ -130,6 +130,22 @@ services:
     networks:
       - cloudgames-network
 
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        APIM_KEY: ${APIM_KEY:-local-development-key}
+    image: cloudgames-frontend
+    container_name: frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - users-api
+      - games-api
+      - payments-api
+    networks:
+      - cloudgames-network
+
 volumes:
   sqlserver-data:
   azurite-data:
